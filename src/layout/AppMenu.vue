@@ -1,8 +1,27 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { useMenu } from '@/composables/useMenu';
+import { storeToRefs, useEmployeeStore } from '@/stores';
+import type { MenuItem } from '@/types/apiModels';
+import { ref, watch } from 'vue';
 import AppMenuItem from './AppMenuItem.vue';
 
-const model = ref([
+interface AppMenuModelItem {
+    label?: string;
+    icon?: string;
+    to?: string;
+    url?: string;
+    target?: string;
+    items?: AppMenuModelItem[];
+    separator?: boolean;
+    class?: string;
+    path?: string;
+}
+
+const employeeStore = useEmployeeStore();
+const { currentEmployee } = storeToRefs(employeeStore);
+const { fetchMenu } = useMenu();
+
+const originalModel: AppMenuModelItem[] = [
     {
         label: 'Home',
         items: [
@@ -256,7 +275,35 @@ const model = ref([
             }
         ]
     }
-]);
+];
+
+const model = ref<AppMenuModelItem[]>([...originalModel]);
+
+function mapMenuItem(item: MenuItem): AppMenuModelItem {
+    return {
+        label: item.label,
+        icon: item.icon || 'pi pi-fw pi-bookmark',
+        to: item.to ?? '',
+        items: item.items && item.items.length > 0 ? item.items.map(mapMenuItem) : undefined
+    };
+}
+
+watch(
+    currentEmployee,
+    async (newVal) => {
+        if (newVal) {
+            const apiMenu = await fetchMenu();
+            if (apiMenu && apiMenu.length > 0) {
+                model.value = [...apiMenu.map(mapMenuItem), ...originalModel];
+            } else {
+                model.value = [...originalModel];
+            }
+        } else {
+            model.value = [...originalModel];
+        }
+    },
+    { immediate: true }
+);
 </script>
 
 <template>

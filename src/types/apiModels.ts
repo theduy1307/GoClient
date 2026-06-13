@@ -19,11 +19,12 @@ export interface TokenResult {
 
 export interface MenuItem {
     id: number;
-    name: string;
-    path: string;
-    icon?: string;
-    parentId?: number;
-    children?: MenuItem[];
+    label: string;
+    icon?: string | null;
+    to?: string | null;
+    visible: boolean;
+    parentId?: number | null;
+    items?: MenuItem[] | null;
 }
 
 // Branch
