@@ -24,9 +24,9 @@ export const productService = {
         return response.data;
     },
 
-    async getPaging(pageIndex: number = 1, pageSize: number = 10): Promise<Result<PagingResultBase<ProductDto>>> {
+    async getPaging(searchTerm: string, pageIndex: number = 1, pageSize: number = 10): Promise<Result<PagingResultBase<ProductDto>>> {
         const response = await apiClient.get<Result<PagingResultBase<ProductDto>>>('/api/v1/Product', {
-            params: { pageIndex, pageSize }
+            params: { searchTerm, pageIndex, pageSize }
         });
         return response.data;
     }

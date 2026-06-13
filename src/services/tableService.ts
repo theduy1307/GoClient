@@ -24,7 +24,7 @@ export const tableService = {
         return response.data;
     },
 
-    async getPaging(pageIndex: number = 1, pageSize: number = 10): Promise<Result<PagingResultBase<TableDto>>> {
+    async getPaging(pageIndex: number = 1, pageSize: number = 100): Promise<Result<PagingResultBase<TableDto>>> {
         const response = await apiClient.get<Result<PagingResultBase<TableDto>>>('/api/v1/Table', {
             params: { pageIndex, pageSize }
         });

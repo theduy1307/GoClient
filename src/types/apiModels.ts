@@ -47,15 +47,17 @@ export interface CreateEmployeeCommand {
 
 export interface EmployeeDto {
     id: number;
-    username: string;
-    email: string;
     firstName: string;
     lastName: string;
-    phoneNumber?: string;
-    roleId: number;
-    roleName: string;
-    branchId: number;
-    branchName: string;
+    nickName: string;
+    dateOfBirth: string;
+    placeOfBirth: string;
+    gender: number;
+    passportNumber: string;
+    taxId: string;
+    isActive: boolean;
+    roleIds: number[];
+    roleCodes: string[];
 }
 
 // Employee Scheduling

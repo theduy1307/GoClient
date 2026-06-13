@@ -12,6 +12,11 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/Dashboard.vue')
             },
             {
+                path: '/booking',
+                name: 'booking',
+                component: () => import('@/views/pages/booking/Booking.vue')
+            },
+            {
                 path: '/uikit/formlayout',
                 name: 'formlayout',
                 component: () => import('@/views/uikit/FormLayout.vue')
