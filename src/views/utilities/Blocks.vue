@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import BlockViewer from '@/components/BlockViewer.vue';
+import BlockViewer from '@/components/common/BlockViewer.vue';
 import { ref } from 'vue';
 
 const password = ref('');

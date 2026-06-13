@@ -1,10 +1,50 @@
 <script setup lang="ts">
-import FloatingConfigurator from '@/components/FloatingConfigurator.vue';
+import FloatingConfigurator from '@/components/common/FloatingConfigurator.vue';
+import { useEmployee } from '@/composables/useEmployee';
+import { ACCESS_TOKEN_KEY } from '@/constants/auth';
+import { authService } from '@/services/authService';
+import { Form } from '@primevue/forms';
+import { zodResolver } from '@primevue/forms/resolvers/zod';
+import Button from 'primevue/button';
+import Checkbox from 'primevue/checkbox';
+import InputText from 'primevue/inputtext';
+import Message from 'primevue/message';
+import Password from 'primevue/password';
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { z } from 'zod';
 
-const email = ref('');
-const password = ref('');
-const checked = ref(false);
+const router = useRouter();
+const { fetchMe } = useEmployee();
+const loading = ref(false);
+
+const resolver = zodResolver(
+    z.object({
+        email: z.string().min(1, 'Email không được để trống'),
+        password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự')
+    })
+);
+
+const onFormSubmit = async (e: any) => {
+    if (e.valid) {
+        loading.value = true;
+        try {
+            const result = await authService.login({
+                email: e.values.email,
+                password: e.values.password
+            });
+            if (result.isSuccess && result.value) {
+                localStorage.setItem(ACCESS_TOKEN_KEY, result.value);
+                await fetchMe();
+                router.push({ name: 'dashboard' });
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+        } finally {
+            loading.value = false;
+        }
+    }
+};
 </script>
 
 <template>
@@ -35,22 +75,28 @@ const checked = ref(false);
                         <span class="text-muted-color font-medium">Sign in to continue</span>
                     </div>
 
-                    <div>
-                        <label for="email1" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Email</label>
-                        <InputText id="email1" type="text" placeholder="Email address" class="w-full md:w-[30rem] mb-8" v-model="email" />
+                    <Form :resolver="resolver" @submit="onFormSubmit" v-slot="$form" class="flex flex-col gap-4 w-full md:w-[30rem]">
+                        <div class="flex flex-col gap-1">
+                            <label for="email" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Email</label>
+                            <InputText id="email" name="email" type="text" placeholder="Email address" class="w-full" />
+                            <Message v-if="$form.email?.invalid" severity="error" size="small" variant="simple">{{ $form.email.error?.message }}</Message>
+                        </div>
 
-                        <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Password</label>
-                        <Password id="password1" v-model="password" placeholder="Password" :toggleMask="true" class="mb-4" fluid :feedback="false"></Password>
+                        <div class="flex flex-col gap-1 mt-4">
+                            <label for="password" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Password</label>
+                            <Password id="password" name="password" placeholder="Password" :toggleMask="true" fluid :feedback="false"></Password>
+                            <Message v-if="$form.password?.invalid" severity="error" size="small" variant="simple">{{ $form.password.error?.message }}</Message>
+                        </div>
 
-                        <div class="flex items-center justify-between mt-2 mb-8 gap-8">
+                        <div class="flex items-center justify-between mt-4 mb-6 gap-8">
                             <div class="flex items-center">
-                                <Checkbox v-model="checked" id="rememberme1" binary class="mr-2"></Checkbox>
-                                <label for="rememberme1">Remember me</label>
+                                <Checkbox id="rememberMe" name="rememberMe" binary class="mr-2"></Checkbox>
+                                <label for="rememberMe">Remember me</label>
                             </div>
                             <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Forgot password?</span>
                         </div>
-                        <Button label="Sign In" class="w-full" as="router-link" to="/"></Button>
-                    </div>
+                        <Button type="submit" label="Sign In" class="w-full" :loading="loading"></Button>
+                    </Form>
                 </div>
             </div>
         </div>

@@ -138,9 +138,32 @@ const routes: RouteRecordRaw[] = [
     }
 ];
 
+import { ACCESS_TOKEN_KEY } from '@/constants/auth';
+import ToastEventBus from 'primevue/toasteventbus';
+
 const router = createRouter({
     history: createWebHistory(),
     routes
+});
+
+router.beforeEach((to, from, next) => {
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+    const isAuthRoute = to.path.startsWith('/auth/');
+    const isLanding = to.path === '/landing';
+
+    if (!token && !isAuthRoute && !isLanding) {
+        ToastEventBus.emit('add', {
+            severity: 'warn',
+            summary: 'Yêu cầu đăng nhập',
+            detail: 'Vui lòng đăng nhập để tiếp tục.',
+            life: 5000
+        });
+        next({ name: 'login' });
+    } else if (token && to.name === 'login') {
+        next({ name: 'dashboard' });
+    } else {
+        next();
+    }
 });
 
 export default router;
