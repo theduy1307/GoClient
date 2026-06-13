@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import FeaturesWidget from '@/components/landing/FeaturesWidget.vue';
-import FooterWidget from '@/components/landing/FooterWidget.vue';
-import HeroWidget from '@/components/landing/HeroWidget.vue';
-import HighlightsWidget from '@/components/landing/HighlightsWidget.vue';
-import PricingWidget from '@/components/landing/PricingWidget.vue';
-import TopbarWidget from '@/components/landing/TopbarWidget.vue';
+import FeaturesWidget from '@/components/common/landing/FeaturesWidget.vue';
+import FooterWidget from '@/components/common/landing/FooterWidget.vue';
+import HeroWidget from '@/components/common/landing/HeroWidget.vue';
+import HighlightsWidget from '@/components/common/landing/HighlightsWidget.vue';
+import PricingWidget from '@/components/common/landing/PricingWidget.vue';
+import TopbarWidget from '@/components/common/landing/TopbarWidget.vue';
 </script>
 
 <template>
