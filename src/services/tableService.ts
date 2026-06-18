@@ -1,4 +1,4 @@
-import type { CreateTableCommand, TableDto, UpdateTableCommand } from '@/types/apiModels';
+import type { CreateTableCommand, TableDto, TableWithReceipts, UpdateTableCommand, UpdateTableStatusRequest } from '@/types/apiModels';
 import type { PagingResultBase } from '@/types/core/paging';
 import type { Result } from '@/types/core/result';
 import apiClient from './apiClient';
@@ -29,5 +29,16 @@ export const tableService = {
             params: { pageIndex, pageSize }
         });
         return response.data;
+    },
+
+    async getTableWithReceipts(tableId: number): Promise<Result<TableWithReceipts>> {
+        const response = await apiClient.get<Result<TableWithReceipts>>(`/api/v1/Table/${tableId}/serving-receipt/`);
+        return response.data;
+    },
+
+    async updateStatus(id: number, request: UpdateTableStatusRequest): Promise<Result<void>> {
+        const response = await apiClient.patch<Result<void>>(`/api/v1/Table/${id}/status`, request);
+        return response.data;
     }
 };
+

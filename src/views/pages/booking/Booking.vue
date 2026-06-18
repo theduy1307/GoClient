@@ -1,14 +1,20 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
 import { useTable } from '@/composables/useTable';
-import TableComponent from './components/TableComponent.vue';
 import Card from 'primevue/card';
+import { onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import TableComponent from './components/TableComponent.vue';
 
+const router = useRouter();
 const { tables, loading, getTables } = useTable();
 
 onMounted(async () => {
     await getTables();
 });
+
+function viewTableDetail(tableId: number) {
+    router.push({ name: 'table-detail', params: { tableId } });
+}
 </script>
 
 <template>
@@ -23,11 +29,9 @@ onMounted(async () => {
                     </div>
                 </template>
                 <template #content>
-                    <div v-if="tables.length === 0 && !loading" class="text-center py-8 text-surface-500">
-                        Không có dữ liệu bàn ăn.
-                    </div>
+                    <div v-if="tables.length === 0 && !loading" class="text-center py-8 text-surface-500">Không có dữ liệu bàn ăn.</div>
                     <div class="grid grid-cols-4 gap-4" v-else>
-                        <div v-for="table in tables" :key="table.id" class="w-full">
+                        <div v-for="table in tables" :key="table.id" class="w-full cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all duration-200" @click="viewTableDetail(table.id)">
                             <TableComponent :table="table" />
                         </div>
                     </div>
@@ -70,15 +74,15 @@ onMounted(async () => {
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-surface-600 dark:text-surface-400 font-medium text-green-600">Available:</span>
-                                    <span class="font-bold text-green-600">{{ tables.filter(t => Number(t.status) === 0).length }}</span>
+                                    <span class="font-bold text-green-600">{{ tables.filter((t) => Number(t.status) === 0).length }}</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-surface-600 dark:text-surface-400 font-medium text-blue-600">Serving:</span>
-                                    <span class="font-bold text-blue-600">{{ tables.filter(t => Number(t.status) === 1).length }}</span>
+                                    <span class="font-bold text-blue-600">{{ tables.filter((t) => Number(t.status) === 1).length }}</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-surface-600 dark:text-surface-400 font-medium text-red-600">Billing:</span>
-                                    <span class="font-bold text-red-600">{{ tables.filter(t => Number(t.status) === 2).length }}</span>
+                                    <span class="font-bold text-red-600">{{ tables.filter((t) => Number(t.status) === 2).length }}</span>
                                 </div>
                             </div>
                         </div>

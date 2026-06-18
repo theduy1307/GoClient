@@ -116,20 +116,25 @@ export interface ProductTypeDto {
 export interface CreateReceiptDetailCommand {
     productId: number;
     quantity: number;
-    price: number;
+    unitPrice: number;
 }
-
+export enum ReceiptStatus {
+    Serving,
+    Paid,
+    Cancelled
+}
 export interface CreateReceiptCommand {
-    branchId: number;
+    totalAmount: number;
     tableId?: number;
-    details: CreateReceiptDetailCommand[];
+    status: ReceiptStatus;
+    receiptDetails: CreateReceiptDetailCommand[];
 }
 
 export interface UpdateReceiptCommand {
     id: number;
-    branchId: number;
+    totalAmount: number;
     tableId?: number;
-    details: CreateReceiptDetailCommand[];
+    receiptDetails: CreateReceiptDetailCommand[];
 }
 
 export interface ReceiptDetailDto {
@@ -150,9 +155,9 @@ export interface ReceiptDto {
     tableId?: number;
     tableName?: string;
     totalAmount: number;
-    status: string;
+    status: ReceiptStatus;
     createdDate: string;
-    details: ReceiptDetailDto[];
+    receiptDetails: ReceiptDetailDto[];
 }
 
 // Role
@@ -220,4 +225,38 @@ export interface ValueAddedTaxDto {
     id: number;
     name: string;
     percentage: number;
+}
+
+// Table Serving Receipts
+export enum TableStatus {
+    Available = 0,
+    Serving = 1,
+    Billing = 2
+}
+
+export interface TableServingReceiptDetailDto {
+    id: number;
+    productId: number;
+    productName: string;
+    quantity: number;
+    unitPrice: number;
+}
+
+export interface TableServingReceiptDto {
+    id: number;
+    totalAmount: number;
+    tableId: number;
+    tableName: string;
+    receiptDetails: TableServingReceiptDetailDto[];
+}
+
+export interface TableWithReceipts {
+    id: number;
+    name: string;
+    status: TableStatus;
+    receipts: ReceiptDto[];
+}
+
+export interface UpdateTableStatusRequest {
+    status: TableStatus;
 }
