@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { useProduct } from '@/composables/useProduct';
+import { useReceipt } from '@/composables/useReceipt';
 import { useTable } from '@/composables/useTable';
 import { receiptService } from '@/services/receiptService';
 import { tableService } from '@/services/tableService';
 import { useTableStore } from '@/stores';
-import { CreateReceiptCommand, ReceiptStatus } from '@/types/apiModels';
+import { CreateReceiptCommand, ReceiptDetailDto, ReceiptDto, ReceiptStatus } from '@/types/apiModels';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import InputNumber from 'primevue/inputnumber';
@@ -19,8 +20,9 @@ const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 const tableStore = useTableStore();
-const { tableWithReceipts, loading, getTableWithReceipts } = useTable();
+const { tableWithReceipts, loading, getTableWithReceipts, updateLastReceiptId, addReceiptToTableWithReceipts } = useTable();
 const { getProductBySearchTerm } = useProduct();
+const { activedReceipt, activedReceiptDetails, getReceiptById } = useReceipt();
 
 const tableId = computed(() => Number(route.params.tableId));
 
@@ -43,9 +45,31 @@ const selectedProducts = ref<SelectedProduct[]>([]);
 onMounted(async () => {
     if (tableId.value) {
         await getTableWithReceipts(tableId.value);
-        mappingTableWithReceiptsToSelectedProduct();
+        await loadActiveReceipt();
     }
 });
+
+async function loadActiveReceipt() {
+    const receipts = tableWithReceipts.value?.receipts || [];
+    const activeReceiptFromTable = receipts.filter((x) => x.status === ReceiptStatus.Serving)[receipts.length - 1] || receipts[receipts.length - 1];
+    if (activeReceiptFromTable) {
+        await getReceiptById(activeReceiptFromTable.id);
+        if (activedReceiptDetails.value) {
+            selectedProducts.value = activedReceiptDetails.value.map((d: any) => ({
+                productId: d.productId,
+                productName: d.productName,
+                productTypeName: '',
+                price: d.unitPrice || d.price || 0,
+                quantity: d.quantity,
+                note: ''
+            }));
+        } else {
+            selectedProducts.value = [];
+        }
+    } else {
+        selectedProducts.value = [];
+    }
+}
 
 async function onSearchInput() {
     if (!searchQuery.value.trim()) {
@@ -92,21 +116,18 @@ function removeProduct(productId: number) {
 const totalSelectedPrice = computed(() => {
     return selectedProducts.value.reduce((sum, p) => sum + p.price * p.quantity, 0);
 });
-function mappingTableWithReceiptsToSelectedProduct() {
-    const receipts = tableWithReceipts.value?.receipts || [];
-    const activeReceipt = receipts.filter((x) => x.status === ReceiptStatus.Serving)[receipts.length - 1];
-    if (activeReceipt && activeReceipt.receiptDetails) {
-        selectedProducts.value = activeReceipt.receiptDetails.map((d: any) => ({
-            productId: d.productId,
-            productName: d.productName,
-            productTypeName: '',
-            price: d.unitPrice || d.price || 0,
-            quantity: d.quantity,
-            note: ''
-        }));
-    } else {
-        selectedProducts.value = [];
-    }
+
+function mappingSelectedProductToReceiptDetails(receiptId: number): ReceiptDetailDto[] {
+    return selectedProducts.value.map(
+        (p): ReceiptDetailDto => ({
+            id: 0,
+            receiptId: receiptId,
+            productId: p.productId,
+            productName: p.productName,
+            quantity: p.quantity,
+            unitPrice: p.price
+        })
+    );
 }
 function goBack() {
     router.push({ name: 'booking' });
@@ -175,6 +196,16 @@ async function handleOrder() {
             // Update table status in store
             if (tableWithReceipts.value) {
                 tableWithReceipts.value.status = 1;
+                const newReceipt: ReceiptDto = {
+                    id: receiptResult.value || 0,
+                    receiptNumber: `#${(receiptResult.value || 0).toString().padStart(6, '0')}`,
+                    tableId: tableId.value,
+                    totalAmount: totalSelectedPrice.value,
+                    status: ReceiptStatus.Serving,
+                    receiptDetails: [...mappingSelectedProductToReceiptDetails(receiptResult.value || 0)]
+                };
+                addReceiptToTableWithReceipts(newReceipt);
+                updateLastReceiptId(receiptResult.value || 0);
             }
             const table = tableStore.tables.find((t) => t.id === tableId.value);
             if (table) {
@@ -183,7 +214,7 @@ async function handleOrder() {
 
             // Refresh table details from API
             await getTableWithReceipts(tableId.value);
-            mappingTableWithReceiptsToSelectedProduct();
+            await loadActiveReceipt();
         } else {
             toast.add({
                 severity: 'error',
@@ -337,7 +368,7 @@ function handlePayment() {
                                 </div>
 
                                 <div class="flex gap-3 justify-end">
-                                    <Button v-if="selectedProducts.length > 0" label="Gọi món" icon="pi pi-send" severity="info" class="text-sm px-5 py-2.5" @click="handleOrder" />
+                                    <Button v-if="selectedProducts.length > 0" label="Gọi món" :icon="loading ? 'pi pi-spin pi-spinner' : 'pi pi-send'" severity="info" class="text-sm px-5 py-2.5" @click="handleOrder" />
                                     <Button v-if="tableWithReceipts.status === 1" label="Thanh toán" icon="pi pi-credit-card" severity="success" class="text-sm px-5 py-2.5" @click="handlePayment" />
                                 </div>
                             </div>

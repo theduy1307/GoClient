@@ -143,20 +143,16 @@ export interface ReceiptDetailDto {
     productId: number;
     productName: string;
     quantity: number;
-    price: number;
-    totalPrice: number;
+    unitPrice: number;
 }
 
 export interface ReceiptDto {
     id: number;
     receiptNumber: string;
-    branchId: number;
-    branchName: string;
     tableId?: number;
     tableName?: string;
     totalAmount: number;
     status: ReceiptStatus;
-    createdDate: string;
     receiptDetails: ReceiptDetailDto[];
 }
 

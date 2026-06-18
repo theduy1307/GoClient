@@ -1,5 +1,6 @@
 import { tableService } from '@/services/tableService';
 import { storeToRefs, useTableStore } from '@/stores';
+import { ReceiptDto } from '@/types/apiModels';
 
 export function useTable() {
     const store = useTableStore();
@@ -26,11 +27,24 @@ export function useTable() {
         }
     }
 
+    function updateLastReceiptId(receiptId: number) {
+        if (store.tableWithReceipts && store.tableWithReceipts.receipts.length > 0) {
+            store.tableWithReceipts.receipts[store.tableWithReceipts.receipts.length - 1].id = receiptId;
+        }
+    }
+    function addReceiptToTableWithReceipts(receipt: ReceiptDto) {
+        if (store.tableWithReceipts) {
+            store.tableWithReceipts.receipts.push(receipt);
+        }
+    }
+
     return {
         tables,
         loading,
         tableWithReceipts,
         getTables,
-        getTableWithReceipts
+        getTableWithReceipts,
+        updateLastReceiptId,
+        addReceiptToTableWithReceipts
     };
 }
