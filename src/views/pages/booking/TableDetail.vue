@@ -15,6 +15,7 @@ import Tag from 'primevue/tag';
 import { useToast } from 'primevue/usetoast';
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import PaymentModal from './components/PaymentModal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -22,10 +23,12 @@ const toast = useToast();
 const tableStore = useTableStore();
 const { tableWithReceipts, loading, getTableWithReceipts, updateLastReceiptId, addReceiptToTableWithReceipts } = useTable();
 const { getProductBySearchTerm } = useProduct();
-const { activedReceipt, activedReceiptDetails, getReceiptById } = useReceipt();
+const { activedReceipt, activedReceiptDetails, getReceiptById, clearActivedReceipt } = useReceipt();
+
+const isPaymentModalVisible = ref(false);
 
 const tableId = computed(() => Number(route.params.tableId));
-
+const receiptCode = computed(() => activedReceipt.value?.receiptCode || '');
 // Search and selection state
 const searchQuery = ref('');
 const searchResults = ref<any[]>([]);
@@ -44,6 +47,7 @@ const selectedProducts = ref<SelectedProduct[]>([]);
 
 onMounted(async () => {
     if (tableId.value) {
+        clearActivedReceipt();
         await getTableWithReceipts(tableId.value);
         await loadActiveReceipt();
     }
@@ -198,7 +202,7 @@ async function handleOrder() {
                 tableWithReceipts.value.status = 1;
                 const newReceipt: ReceiptDto = {
                     id: receiptResult.value || 0,
-                    receiptNumber: `#${(receiptResult.value || 0).toString().padStart(6, '0')}`,
+                    receiptCode: ``,
                     tableId: tableId.value,
                     totalAmount: totalSelectedPrice.value,
                     status: ReceiptStatus.Serving,
@@ -237,7 +241,19 @@ async function handleOrder() {
 }
 
 function handlePayment() {
-    alert('Thanh toán đơn hàng thành công!');
+    isPaymentModalVisible.value = true;
+}
+
+async function onPaymentSuccess() {
+    toast.add({
+        severity: 'success',
+        summary: 'Thành công',
+        detail: 'Thanh toán thành công!',
+        life: 3000
+    });
+    // Reload table status and active receipt after payment success
+    await getTableWithReceipts(tableId.value);
+    await loadActiveReceipt();
 }
 </script>
 
@@ -275,9 +291,9 @@ function handlePayment() {
                                 <span class="text-surface-600 dark:text-surface-400">Trạng thái:</span>
                                 <Tag :severity="getStatusSeverity(tableWithReceipts.status)" :value="getStatusLabel(tableWithReceipts.status)"></Tag>
                             </div>
-                            <div class="flex justify-between items-center py-2">
-                                <span class="text-surface-600 dark:text-surface-400">ID Bàn:</span>
-                                <span class="font-mono text-surface-900 dark:text-surface-0">#{{ tableWithReceipts.id }}</span>
+                            <div v-if="receiptCode.length" class="flex justify-between items-center py-2">
+                                <span class="text-surface-600 dark:text-surface-400">Mã hóa đơn:</span>
+                                <span class="font-mono text-surface-900 dark:text-surface-0">#{{ receiptCode }}</span>
                             </div>
                         </div>
                     </template>
@@ -382,5 +398,8 @@ function handlePayment() {
         <div v-else class="text-center py-8">
             <span class="text-lg text-red-500">Không tìm thấy thông tin bàn ăn hoặc có lỗi xảy ra.</span>
         </div>
+
+        <!-- Payment Dialog -->
+        <PaymentModal v-model:visible="isPaymentModalVisible" @success="onPaymentSuccess" />
     </div>
 </template>

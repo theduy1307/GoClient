@@ -148,7 +148,7 @@ export interface ReceiptDetailDto {
 
 export interface ReceiptDto {
     id: number;
-    receiptNumber: string;
+    receiptCode: string;
     tableId?: number;
     tableName?: string;
     totalAmount: number;
