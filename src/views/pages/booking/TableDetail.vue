@@ -93,8 +93,8 @@ const totalSelectedPrice = computed(() => {
     return selectedProducts.value.reduce((sum, p) => sum + p.price * p.quantity, 0);
 });
 function mappingTableWithReceiptsToSelectedProduct() {
-    const activeReceipt = tableWithReceipts.value?.receipts.filter((x) => x.status === ReceiptStatus.Serving)[0];
-    console.log(activeReceipt?.receiptDetails);
+    const receipts = tableWithReceipts.value?.receipts || [];
+    const activeReceipt = receipts.filter((x) => x.status === ReceiptStatus.Serving)[receipts.length - 1];
     if (activeReceipt && activeReceipt.receiptDetails) {
         selectedProducts.value = activeReceipt.receiptDetails.map((d: any) => ({
             productId: d.productId,
@@ -302,25 +302,27 @@ function handlePayment() {
                                 <div
                                     v-for="item in selectedProducts"
                                     :key="item.productId"
-                                    class="p-3 md:p-4 border border-surface-200 dark:border-surface-700 rounded-lg bg-surface-50 dark:bg-surface-800 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                                    class="p-3 md:p-4 border border-surface-200 dark:border-surface-700 rounded-lg bg-surface-50 dark:bg-surface-800 flex flex-col md:grid md:grid-cols-12 md:items-center gap-4"
                                 >
-                                    <div class="flex-grow flex flex-col md:flex-row md:items-center gap-4">
-                                        <div class="flex-grow min-w-[200px]">
-                                            <span class="font-bold text-surface-900 dark:text-surface-0 text-sm md:text-base block mb-0.5">{{ item.productName }}</span>
-                                            <span class="text-xs text-surface-500 block">{{ item.productTypeName }}</span>
-                                        </div>
-                                        <div class="w-full md:w-48">
-                                            <InputText v-model="item.note" placeholder="Ghi chú thêm..." class="w-full text-xs p-2" />
-                                        </div>
+                                    <!-- Name & Type -->
+                                    <div class="col-span-12 md:col-span-4">
+                                        <span class="font-bold text-surface-900 dark:text-surface-0 text-sm md:text-base block mb-0.5">{{ item.productName }}</span>
+                                        <span class="text-xs text-surface-500 block">{{ item.productTypeName }}</span>
                                     </div>
 
-                                    <div class="flex items-center justify-between md:justify-end gap-6 border-t md:border-t-0 border-surface-200 dark:border-surface-700 pt-3 md:pt-0">
-                                        <div class="text-right">
+                                    <!-- Note -->
+                                    <div class="col-span-12 md:col-span-4">
+                                        <InputText v-model="item.note" placeholder="Ghi chú thêm..." class="w-full text-xs p-2" />
+                                    </div>
+
+                                    <!-- Price & Quantity & Delete -->
+                                    <div class="col-span-12 md:col-span-4 flex items-center justify-between md:justify-end gap-6 border-t md:border-t-0 border-surface-200 dark:border-surface-700 pt-3 md:pt-0">
+                                        <div class="text-right min-w-[70px]">
                                             <span class="text-xs text-surface-500 block md:hidden">Đơn giá:</span>
                                             <span class="font-semibold text-sm text-primary">{{ formatCurrency(item.price) }}</span>
                                         </div>
-                                        <div class="flex items-center gap-8">
-                                            <InputNumber v-model="item.quantity" showButtons buttonLayout="horizontal" :min="1" class="w-36" inputClass="w-10 text-center text-sm p-1" incrementButtonClass="p-1" decrementButtonClass="p-1" />
+                                        <div class="flex items-center gap-4">
+                                            <InputNumber v-model="item.quantity" showButtons buttonLayout="horizontal" :min="1" class="w-32" inputClass="w-8 text-center text-sm p-1" incrementButtonClass="p-1" decrementButtonClass="p-1" />
                                             <Button icon="pi pi-trash" severity="danger" rounded @click="removeProduct(item.productId)" />
                                         </div>
                                     </div>
