@@ -5,7 +5,7 @@ import { useTable } from '@/composables/useTable';
 import { receiptService } from '@/services/receiptService';
 import { tableService } from '@/services/tableService';
 import { useTableStore } from '@/stores';
-import { CreateReceiptCommand, ReceiptDetailDto, ReceiptDto, ReceiptStatus } from '@/types/apiModels';
+import { CreateReceiptCommand, ReceiptDetailDto, ReceiptDto, ReceiptStatus, UpdateReceiptCommand } from '@/types/apiModels';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import InputNumber from 'primevue/inputnumber';
@@ -169,25 +169,41 @@ function formatCurrency(value: number) {
 
 async function handleOrder() {
     if (selectedProducts.value.length === 0) return;
-
-    const createReceiptCommand: CreateReceiptCommand = {
-        totalAmount: totalSelectedPrice.value,
-        tableId: tableId.value,
-        status: ReceiptStatus.Serving,
-        receiptDetails: selectedProducts.value.map((p) => ({
-            productId: p.productId,
-            quantity: p.quantity,
-            unitPrice: p.price
-        }))
-    };
-
-    const updateStatusRequest = {
-        status: 1 // TableStatus.Serving
-    };
-
     loading.value = true;
     try {
-        const [statusResult, receiptResult] = await Promise.all([tableService.updateStatus(tableId.value, updateStatusRequest), receiptService.create(createReceiptCommand)]);
+        const updateStatusRequest = {
+            status: 1 // TableStatus.Serving
+        };
+        const promises: Promise<any>[] = [];
+        if (activedReceipt.value) {
+            const updateReceiptCommand: UpdateReceiptCommand = {
+                id: activedReceipt.value.id,
+                totalAmount: activedReceipt.value.totalAmount + totalSelectedPrice.value,
+                tableId: tableId.value,
+                status: ReceiptStatus.Serving,
+                receiptDetails: selectedProducts.value.map((p) => ({
+                    productId: p.productId,
+                    quantity: p.quantity,
+                    unitPrice: p.price
+                }))
+            };
+            promises.push(receiptService.updateStatus(activedReceipt.value.id, { status: ReceiptStatus.Serving, id: activedReceipt.value.id }));
+            promises.push(receiptService.update(activedReceipt.value.id, updateReceiptCommand));
+        } else {
+            const createReceiptCommand: CreateReceiptCommand = {
+                totalAmount: totalSelectedPrice.value,
+                tableId: tableId.value,
+                status: ReceiptStatus.Serving,
+                receiptDetails: selectedProducts.value.map((p) => ({
+                    productId: p.productId,
+                    quantity: p.quantity,
+                    unitPrice: p.price
+                }))
+            };
+            promises.push(tableService.updateStatus(tableId.value, updateStatusRequest));
+            promises.push(receiptService.create(createReceiptCommand));
+        }
+        const [statusResult, receiptResult] = await Promise.all(promises);
 
         if (statusResult.isSuccess && receiptResult.isSuccess) {
             toast.add({
@@ -240,20 +256,65 @@ async function handleOrder() {
     }
 }
 
-function handlePayment() {
+function createOrder() {}
+
+function updateOrder() {}
+async function handlePayment() {
     isPaymentModalVisible.value = true;
+    try {
+        const result = await tableService.updateStatus(tableId.value, { status: 2 });
+        if (result.isSuccess) {
+            if (tableWithReceipts.value) {
+                tableWithReceipts.value.status = 2; // Billing
+            }
+            const table = tableStore.tables.find((t) => t.id === tableId.value);
+            if (table) {
+                table.status = '2'; // Billing
+            }
+        }
+    } catch (error) {
+        console.error('Failed to update table status to Billing:', error);
+    }
 }
 
 async function onPaymentSuccess() {
-    toast.add({
-        severity: 'success',
-        summary: 'Thành công',
-        detail: 'Thanh toán thành công!',
-        life: 3000
-    });
-    // Reload table status and active receipt after payment success
-    await getTableWithReceipts(tableId.value);
-    await loadActiveReceipt();
+    loading.value = true;
+    try {
+        const promises: Promise<any>[] = [];
+
+        // 1. Update active receipt to Paid (status = 1)
+        if (activedReceipt.value) {
+            promises.push(receiptService.updateStatus(activedReceipt.value.id, { status: ReceiptStatus.Paid, id: activedReceipt.value.id }));
+        }
+
+        // 2. Update table status to Available (status = 0)
+        promises.push(tableService.updateStatus(tableId.value, { status: 0 }));
+
+        // Wait for both updates to complete
+        await Promise.all(promises);
+
+        toast.add({
+            severity: 'success',
+            summary: 'Thành công',
+            detail: 'Thanh toán thành công!',
+            life: 3000
+        });
+
+        // 3. Reload table status and active receipt after payment success (as in onMounted)
+        clearActivedReceipt();
+        await getTableWithReceipts(tableId.value);
+        await loadActiveReceipt();
+    } catch (error) {
+        console.error('Payment processing error:', error);
+        toast.add({
+            severity: 'error',
+            summary: 'Thất bại',
+            detail: 'Lỗi xảy ra trong quá trình xử lý thanh toán.',
+            life: 3000
+        });
+    } finally {
+        loading.value = false;
+    }
 }
 </script>
 

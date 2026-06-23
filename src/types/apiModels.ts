@@ -134,9 +134,13 @@ export interface UpdateReceiptCommand {
     id: number;
     totalAmount: number;
     tableId?: number;
+    status: ReceiptStatus;
     receiptDetails: CreateReceiptDetailCommand[];
 }
-
+export interface UpdateReceiptStatusRequest {
+    status: ReceiptStatus;
+    id: number;
+}
 export interface ReceiptDetailDto {
     id: number;
     receiptId: number;

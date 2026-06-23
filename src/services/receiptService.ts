@@ -1,4 +1,4 @@
-import type { CreateReceiptCommand, ReceiptDto, UpdateReceiptCommand } from '@/types/apiModels';
+import type { CreateReceiptCommand, ReceiptDto, UpdateReceiptCommand, UpdateReceiptStatusRequest } from '@/types/apiModels';
 import type { PagingResultBase } from '@/types/core/paging';
 import type { Result } from '@/types/core/result';
 import apiClient from './apiClient';
@@ -28,6 +28,10 @@ export const receiptService = {
         const response = await apiClient.get<Result<PagingResultBase<ReceiptDto>>>('/api/v1/Receipt', {
             params: { pageIndex, pageSize }
         });
+        return response.data;
+    },
+    async updateStatus(id: number, request: UpdateReceiptStatusRequest): Promise<Result<void>> {
+        const response = await apiClient.patch<Result<void>>(`/api/v1/Receipt/${id}/status`, request);
         return response.data;
     }
 };
