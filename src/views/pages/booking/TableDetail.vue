@@ -13,7 +13,7 @@ import InputText from 'primevue/inputtext';
 import ProgressSpinner from 'primevue/progressspinner';
 import Tag from 'primevue/tag';
 import { useToast } from 'primevue/usetoast';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import PaymentModal from './components/PaymentModal.vue';
 import ReceiptTemplate from './components/ReceiptTemplate.vue';
@@ -36,6 +36,7 @@ const searchResults = ref<any[]>([]);
 const isSearching = ref(false);
 
 interface SelectedProduct {
+    id?: number;
     productId: number;
     productName: string;
     productTypeName: string;
@@ -45,6 +46,22 @@ interface SelectedProduct {
 }
 
 const selectedProducts = ref<SelectedProduct[]>([]);
+
+// Sync local selectedProducts changes back to Pinia store for real-time print preview updates
+watch(
+    selectedProducts,
+    (newProducts) => {
+        activedReceiptDetails.value = newProducts.map((p) => ({
+            id: p.id || 0,
+            receiptId: activedReceipt.value?.id || 0,
+            productId: p.productId,
+            productName: p.productName,
+            quantity: p.quantity,
+            unitPrice: p.price
+        }));
+    },
+    { deep: true }
+);
 
 onMounted(async () => {
     if (tableId.value) {
@@ -61,6 +78,7 @@ async function loadActiveReceipt() {
         await getReceiptById(activeReceiptFromTable.id);
         if (activedReceiptDetails.value) {
             selectedProducts.value = activedReceiptDetails.value.map((d: any) => ({
+                id: d.id,
                 productId: d.productId,
                 productName: d.productName,
                 productTypeName: '',

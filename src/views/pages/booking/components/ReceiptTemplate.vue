@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useReceipt } from '@/composables/useReceipt';
-import { Divider } from 'primevue';
 import QrcodeVue from 'qrcode.vue';
 import { computed } from 'vue';
 
@@ -43,8 +42,8 @@ const printReceipt = () => {
             <div class="receipt-header">
                 <h2 class="store-name">TRƯỜNG HUY QUÁN</h2>
                 <div class="store-info">
-                    <p>ĐC: 92 Nguyễn Du, phường Thuận An, TP.HCM</p>
-                    <p>ĐT: 0353 603 631</p>
+                    <p>ĐC: 3 Nguyễn Du, phường Thuận An, TP.HCM</p>
+                    <p>ĐT: 0973 629 279</p>
                 </div>
             </div>
 
@@ -107,9 +106,7 @@ const printReceipt = () => {
 
         <!-- Print Action Button (Hidden during print) -->
         <div class="text-center mt-4 no-print">
-            <button class="print-btn" @click="printReceipt">
-                <i class="pi pi-print mr-2"></i> In hóa đơn
-            </button>
+            <button class="print-btn" @click="printReceipt"><i class="pi pi-print mr-2"></i> In hóa đơn</button>
         </div>
     </div>
 </template>
@@ -272,12 +269,12 @@ const printReceipt = () => {
     padding: 8px 24px;
     font-weight: bold;
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: all 0.2s;
 }
 
 .print-btn:hover {
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
     background-color: #2563eb;
 }
 
@@ -288,11 +285,14 @@ const printReceipt = () => {
 /* Print specific styles */
 @page {
     size: 80mm auto; /* Standard K80 thermal paper width */
-    margin: 0;       /* Removes browser header/footer and page margins */
+    margin: 0; /* Removes browser header/footer and page margins */
 }
 
 @media print {
-    html, body, .receipt-container, .receipt-paper {
+    html,
+    body,
+    .receipt-container,
+    .receipt-paper {
         height: auto !important;
         min-height: 0 !important;
         max-height: none !important;
@@ -303,7 +303,7 @@ const printReceipt = () => {
         padding: 0;
         background: #fff;
     }
-    
+
     .receipt-container {
         width: 100%;
         max-width: 100%;
@@ -320,7 +320,7 @@ const printReceipt = () => {
         margin: 0 !important;
         border-radius: 0 !important;
     }
-    
+
     .no-print {
         display: none !important;
     }

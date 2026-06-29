@@ -71,7 +71,7 @@ const onFormSubmit = async (e: any) => {
                                 />
                             </g>
                         </svg>
-                        <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Welcome to PrimeLand!</div>
+                        <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Welcome to Truong Huy Quan POS!</div>
                         <span class="text-muted-color font-medium">Sign in to continue</span>
                     </div>
 
