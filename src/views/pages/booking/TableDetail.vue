@@ -16,6 +16,7 @@ import { useToast } from 'primevue/usetoast';
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import PaymentModal from './components/PaymentModal.vue';
+import ReceiptTemplate from './components/ReceiptTemplate.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -316,6 +317,10 @@ async function onPaymentSuccess() {
         loading.value = false;
     }
 }
+
+function printReceipt() {
+    window.print();
+}
 </script>
 
 <template>
@@ -400,7 +405,10 @@ async function onPaymentSuccess() {
             <div class="col-span-12">
                 <Card class="w-full">
                     <template #title>
-                        <span class="text-lg md:text-xl font-semibold">Các món đã chọn</span>
+                        <div class="flex justify-between items-center w-full">
+                            <span class="text-lg md:text-xl font-semibold">Các món đã chọn</span>
+                            <Button v-if="tableWithReceipts?.status !== 0" label="In hóa đơn" icon="pi pi-print" severity="secondary" outlined class="text-sm" @click="printReceipt" />
+                        </div>
                     </template>
                     <template #content>
                         <div v-if="selectedProducts.length === 0" class="text-center py-12 text-surface-500">Chưa chọn món nào. Hãy tìm kiếm và chọn món ở trên.</div>
@@ -446,7 +454,7 @@ async function onPaymentSuccess() {
 
                                 <div class="flex gap-3 justify-end">
                                     <Button v-if="selectedProducts.length > 0" label="Gọi món" :icon="loading ? 'pi pi-spin pi-spinner' : 'pi pi-send'" severity="info" class="text-sm px-5 py-2.5" @click="handleOrder" />
-                                    <Button v-if="tableWithReceipts.status === 1" label="Thanh toán" icon="pi pi-credit-card" severity="success" class="text-sm px-5 py-2.5" @click="handlePayment" />
+                                    <Button v-if="tableWithReceipts.status !== 0" label="Thanh toán" icon="pi pi-credit-card" severity="success" class="text-sm px-5 py-2.5" @click="handlePayment" />
                                 </div>
                             </div>
                         </div>
@@ -459,8 +467,35 @@ async function onPaymentSuccess() {
         <div v-else class="text-center py-8">
             <span class="text-lg text-red-500">Không tìm thấy thông tin bàn ăn hoặc có lỗi xảy ra.</span>
         </div>
-
         <!-- Payment Dialog -->
         <PaymentModal v-model:visible="isPaymentModalVisible" @success="onPaymentSuccess" />
+
+        <!-- Print Receipt Template (teleported to body, hidden on screen, visible when printing) -->
+        <Teleport to="body">
+            <div class="print-only-container">
+                <ReceiptTemplate />
+            </div>
+        </Teleport>
     </div>
 </template>
+
+<style scoped>
+@media screen {
+    .print-only-container {
+        display: none !important;
+    }
+}
+</style>
+
+<style>
+@media print {
+    html, body, #app, .print-only-container {
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+    }
+    #app {
+        display: none !important;
+    }
+}
+</style>
